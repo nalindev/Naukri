@@ -14,14 +14,19 @@ descriptions = [
 
 async def main():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=False)  # keep false for now
         context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113 Safari/537.36",
+            locale="en-US",
             viewport={"width": 1280, "height": 800},
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113 Safari/537.36"
+            java_script_enabled=True
         )
         page = await context.new_page()
 
-        await page.goto("https://www.naukri.com/nlogin/login")
+        # Hide automation fingerprint
+        await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
+        await page.goto("https://www.naukri.com/nlogin/login", wait_until="networkidle")
 
         await page.screenshot(path="debug.png")
         await page.fill("#usernameField", USERNAME)
@@ -31,7 +36,7 @@ async def main():
         await page.wait_for_timeout(5000)
 
         # Go to profile
-        await page.goto("https://www.naukri.com/mnjuser/profile")
+        await page.goto("https://www.naukri.com/mnjuser/profile", wait_until="networkidle")
 
         # Wait for page to load
         await page.wait_for_timeout(5000)
